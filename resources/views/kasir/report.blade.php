@@ -21,11 +21,11 @@
                 <form action="{{ route('kasir.report') }}" method="GET" class="row g-3 align-items-end">
                     <div class="col-md-3">
                         <label class="form-label small fw-bold">Tanggal Mulai</label>
-                        <input type="datetime-local" name="start_date" class="form-control" value="{{ request('start_date') }}">
+                        <input type="date" name="start_date" class="form-control" value="{{ request('start_date') }}">
                     </div>
                     <div class="col-md-3">
                         <label class="form-label small fw-bold">Tanggal Selesai</label>
-                        <input type="datetime-local" name="end_date" class="form-control" value="{{ request('end_date') }}">
+                        <input type="date" name="end_date" class="form-control" value="{{ request('end_date') }}">
                     </div>
                     <div class="col-md-3">
                         <label class="form-label small fw-bold">Nama Kasir</label>
@@ -132,7 +132,11 @@
     <div class="card border-0 shadow-sm rounded-3 overflow-hidden">
         <div class="card-header bg-white border-0 py-3 d-flex align-items-center justify-content-between">
             <h6 class="m-0 font-weight-bold text-primary">Riwayat Transaksi</h6>
-            <span class="badge bg-soft-primary text-primary px-3 py-2 rounded-pill" style="background-color: #eef2ff;">Lunas (Paid)</span>
+            @if(auth()->user()->role == 'kasir')
+                <span class="badge bg-soft-primary text-primary px-3 py-2 rounded-pill" style="background-color: #eef2ff;">Lunas (Paid)</span>
+            @else
+                <span class="badge bg-soft-secondary text-secondary px-3 py-2 rounded-pill" style="background-color: #f8f9fa;">Semua Status</span>
+            @endif
         </div>
         <div class="card-body p-0">
             <div class="table-responsive">
@@ -145,7 +149,10 @@
                             @endif
                             <th class="py-3 border-0 fw-bold">Waktu Transaksi</th>
                             <th class="py-3 border-0 fw-bold text-center">Meja</th>
-                            <th class="py-3 border-0 fw-bold text-end pe-4">Jumlah Bayar</th>
+                            @if(auth()->user()->role == 'admin')
+                            <th class="py-3 border-0 fw-bold text-center">Status</th>
+                            @endif
+                            <th class="py-3 border-0 fw-bold text-end pe-4">Total Harga</th>
                             <th class="py-3 border-0 fw-bold text-center pe-4">Aksi</th>
                         </tr>
                     </thead>
@@ -169,6 +176,17 @@
                                     Meja {{ $order->table->number ?? '-' }}
                                 </span>
                             </td>
+                            @if(auth()->user()->role == 'admin')
+                            <td class="text-center">
+                                @if($order->payment_status == 'paid')
+                                    <span class="badge bg-success">Lunas</span>
+                                @else
+                                    <span class="badge bg-warning text-dark">Belum Lunas</span>
+                                @endif
+                                <br>
+                                <small class="text-muted">{{ ucfirst($order->status) }}</small>
+                            </td>
+                            @endif
                             <td class="text-end pe-4">
                                 <span class="fw-bold text-success">Rp {{ number_format($order->total_price, 0, ',', '.') }}</span>
                             </td>
@@ -243,7 +261,7 @@
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="{{ auth()->user()->role == 'kasir' ? 6 : 5 }}" class="text-center py-5">
+                            <td colspan="{{ auth()->user()->role == 'admin' ? 7 : (auth()->user()->role == 'kasir' ? 6 : 5) }}" class="text-center py-5">
                                 <p class="text-muted mb-0">Tidak ada data untuk rentang tanggal ini.</p>
                             </td>
                         </tr>

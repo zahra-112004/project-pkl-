@@ -68,6 +68,8 @@ Route::prefix('kasir')->middleware(['auth', 'role:kasir'])->group(function () {
     Route::get('/history', [DapurController::class, 'history'])->name('dapur.history');
     Route::post('/update-status/{id}', [DapurController::class, 'updateStatus'])->name('dapur.update-status');
     Route::get('/check-new', [DapurController::class, 'checkNewOrders'])->name('dapur.check-new');
+    Route::get('/menus', [DapurController::class, 'menus'])->name('dapur.menus');
+    Route::patch('/menus/{id}/toggle-status', [DapurController::class, 'toggleMenuStatus'])->name('dapur.menus.toggle-status');
 });
 
 // ── 6. Customer & Order Routes ────────────────────

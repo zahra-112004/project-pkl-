@@ -144,6 +144,11 @@
             <i class="fas fa-history"></i> Riwayat Masak
         </a>
     </li>
+    <li class="nav-item">
+        <a class="nav-link {{ request()->routeIs('dapur.menus') ? 'active' : '' }}" href="{{ route('dapur.menus') }}">
+            <i class="fas fa-boxes"></i> Stok Menu
+        </a>
+    </li>
 @endif
 
             {{-- SISTEM: KHUSUS ADMIN --}}

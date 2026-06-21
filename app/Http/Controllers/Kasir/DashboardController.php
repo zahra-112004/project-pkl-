@@ -197,23 +197,18 @@ class DashboardController extends Controller
 
     public function report(Request $request)
     {
-        $query = Order::where('payment_status', 'paid')->with(['table', 'orderDetails.menu', 'kasir']);
-
         /** @var \App\Models\User $user */
         $user = Auth::user();
 
+        $query = Order::with(['table', 'orderDetails.menu', 'kasir']);
+
         if ($user && $user->role == 'kasir') {
-            $query->where('kasir_id', $user->id);
+            $query->where('payment_status', 'paid')->where('kasir_id', $user->id);
         }
 
         if ($request->filled('start_date') && $request->filled('end_date')) {
-            if ($user && $user->role == 'kasir') {
-                $startDate = \Carbon\Carbon::parse($request->start_date)->startOfDay()->format('Y-m-d H:i:s');
-                $endDate = \Carbon\Carbon::parse($request->end_date)->endOfDay()->format('Y-m-d H:i:s');
-            } else {
-                $startDate = \Carbon\Carbon::parse($request->start_date)->format('Y-m-d H:i:s');
-                $endDate = \Carbon\Carbon::parse($request->end_date)->format('Y-m-d H:i:s');
-            }
+            $startDate = \Carbon\Carbon::parse($request->start_date)->startOfDay()->format('Y-m-d H:i:s');
+            $endDate = \Carbon\Carbon::parse($request->end_date)->endOfDay()->format('Y-m-d H:i:s');
             $query->whereBetween('created_at', [$startDate, $endDate]);
         }
 
@@ -225,7 +220,7 @@ class DashboardController extends Controller
             $query->where('kasir_id', $request->kasir_id);
         }
 
-        $total_revenue = $query->sum('total_price');
+        $total_revenue = (clone $query)->where('payment_status', 'paid')->sum('total_price');
         $total_transactions = $query->count();
         $reports = $query->latest()->paginate(10);
         $kasirs = User::where('role', 'kasir')->get();
@@ -235,23 +230,18 @@ class DashboardController extends Controller
 
     public function exportPdf(Request $request)
     {
-        $query = Order::where('payment_status', 'paid')->with(['table', 'orderDetails.menu', 'kasir']);
-
         /** @var \App\Models\User $user */
         $user = Auth::user();
 
+        $query = Order::with(['table', 'orderDetails.menu', 'kasir']);
+
         if ($user && $user->role == 'kasir') {
-            $query->where('kasir_id', $user->id);
+            $query->where('payment_status', 'paid')->where('kasir_id', $user->id);
         }
 
         if ($request->filled('start_date') && $request->filled('end_date')) {
-            if ($user && $user->role == 'kasir') {
-                $startDate = \Carbon\Carbon::parse($request->start_date)->startOfDay()->format('Y-m-d H:i:s');
-                $endDate = \Carbon\Carbon::parse($request->end_date)->endOfDay()->format('Y-m-d H:i:s');
-            } else {
-                $startDate = \Carbon\Carbon::parse($request->start_date)->format('Y-m-d H:i:s');
-                $endDate = \Carbon\Carbon::parse($request->end_date)->format('Y-m-d H:i:s');
-            }
+            $startDate = \Carbon\Carbon::parse($request->start_date)->startOfDay()->format('Y-m-d H:i:s');
+            $endDate = \Carbon\Carbon::parse($request->end_date)->endOfDay()->format('Y-m-d H:i:s');
             $query->whereBetween('created_at', [$startDate, $endDate]);
         }
 
@@ -263,7 +253,7 @@ class DashboardController extends Controller
             $query->where('kasir_id', $request->kasir_id);
         }
 
-        $total_revenue = $query->sum('total_price');
+        $total_revenue = (clone $query)->where('payment_status', 'paid')->sum('total_price');
         $total_transactions = $query->count();
         $reports = $query->latest()->get(); // Ambil semua data untuk PDF tanpa pagination
         $kasirs = User::where('role', 'kasir')->get();

@@ -37,4 +37,19 @@ class DapurController extends Controller
 
         return back()->with('success', 'Status pesanan berhasil diperbarui ke ' . $request->status);
     }
+
+    public function menus()
+    {
+        $menus = \App\Models\Menu::with('category')->get();
+        return view('dapur.menus', compact('menus'));
+    }
+
+    public function toggleMenuStatus($id)
+    {
+        $menu = \App\Models\Menu::findOrFail($id);
+        $menu->update([
+            'is_available' => !$menu->is_available
+        ]);
+        return back()->with('success', 'Status ketersediaan menu berhasil diubah!');
+    }
 }
