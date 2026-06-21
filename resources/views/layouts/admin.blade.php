@@ -113,17 +113,17 @@
             @if(auth()->user()->role == 'admin' || auth()->user()->role == 'kasir')
                 <div class="text-uppercase text-light fw-bold menu-header">Transaksi</div>
                 @if(auth()->user()->role == 'kasir')
-        <li class="nav-item">
-            <a class="nav-link {{ request()->routeIs('kasir.pesanan-baru') ? 'active' : '' }}" href="{{ route('kasir.pesanan-baru') }}">
-                <i class="fas fa-plus-circle"></i> Pesanan Baru
-            </a>
-        </li>
-    @endif
-                <li class="nav-item">
-                    <a class="nav-link {{ request()->routeIs('kasir.pembayaran.index') ? 'active' : '' }}" href="{{ route('kasir.pembayaran.index') }}">
-                        <i class="fas fa-file-invoice-dollar"></i> Pembayaran
-                    </a>
-                </li>
+                    <li class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('kasir.pesanan-baru') ? 'active' : '' }}" href="{{ route('kasir.pesanan-baru') }}">
+                            <i class="fas fa-plus-circle"></i> Pesanan Baru
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('kasir.pembayaran.index') ? 'active' : '' }}" href="{{ route('kasir.pembayaran.index') }}">
+                            <i class="fas fa-file-invoice-dollar"></i> Pembayaran
+                        </a>
+                    </li>
+                @endif
                 <li class="nav-item">
                     <a class="nav-link {{ request()->routeIs('kasir.report') ? 'active' : '' }}" href="{{ route('kasir.report') }}">
                         <i class="fas fa-chart-line"></i> Laporan Penjualan
