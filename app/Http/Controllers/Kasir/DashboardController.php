@@ -6,7 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Order;
 use App\Models\Table;
 use App\Models\Menu;
-use App\Models\OrderDetail; // 
+use App\Models\OrderDetail;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -18,7 +18,6 @@ class DashboardController extends Controller
 {
     public function index()
     {
-        // Pesanan akan hilang dari tabel ini otomatis jika payment_status sudah 'paid'
         $pendingPayments = Order::with('table')
                             ->where('payment_status', 'unpaid')
                             ->latest()
@@ -26,7 +25,6 @@ class DashboardController extends Controller
 
         $tables = Table::orderBy('number', 'asc')->get();
 
-        // Statistik Pendapatan Hari Ini (tetap hitung yang sudah lunas)
         $todayEarnings = Order::whereDate('created_at', today())
                             ->where('payment_status', 'paid')
                             ->sum('total_price');
@@ -46,12 +44,11 @@ class DashboardController extends Controller
                         ->latest()
                         ->paginate(10);
 
-        return view('kasir.history', compact('history')); // Diperbaiki dari kasir.pembayaran_history
+        return view('kasir.history', compact('history'));
     }
 
     public function showPembayaran($id)
     {
-        // Pastikan relasi di bawah sesuai dengan nama yang ada di Model Order
         $order = Order::with(['table', 'orderDetails.menu'])
                     ->findOrFail($id);
 
@@ -65,7 +62,6 @@ class DashboardController extends Controller
         try {
             $kembalian = $request->payment_amount - $order->total_price;
 
-            // 1. Update Order jadi Lunas
             $order->update([
                 'kasir_id'       => Auth::id(),
                 'payment_status' => 'paid',
@@ -73,11 +69,7 @@ class DashboardController extends Controller
                 'payment_amount' => $request->payment_amount,
                 'change_amount'  => $kembalian,
                 'paid_at'        => now(),
-                //'status'         => 'served'
             ]);
-
-            // 2. KOSONGKAN MEJA DIHAPUS - Meja tetap berstatus occupied sampai direset manual kasir
-            // \App\Models\Table::where('id', $order->table_id)->update(['status' => 'available']);
 
             DB::commit();
             return redirect()->route('kasir.dashboard')->with('success', 'Pembayaran Berhasil! Jangan lupa kosongkan meja jika pelanggan sudah pergi.');
@@ -128,7 +120,7 @@ class DashboardController extends Controller
                     'customer_name' => $request->customer_name ?? 'Pelanggan Manual',
                     'total_price'   => 0,
                     'status'        => 'pending',
-                    'payment_status' => 'unpaid', // Pastikan kolom ini ada di Order.php juga
+                    'payment_status' => 'unpaid',
                 ]);
 
                 $totalPrice = 0;
@@ -137,38 +129,32 @@ class DashboardController extends Controller
                     if (isset($item['quantity']) && $item['quantity'] > 0) {
                         $hargaSatuan = $item['price'];
                         $qty = $item['quantity'];
-                        $hitungSubtotal = $qty * $hargaSatuan; // HITUNG MANUAL DI SINI
+                        $hitungSubtotal = $qty * $hargaSatuan;
 
                         $totalPrice += $hitungSubtotal;
 
-                        // SINKRONKAN DENGAN MODEL ORDERDETAIL
                         OrderDetail::create([
                             'order_id' => $order->id,
                             'menu_id'  => $menu_id,
                             'quantity' => $qty,
                             'price'    => $hargaSatuan,
-                            'subtotal' => $hitungSubtotal, // SEKARANG SUDAH ADA ISI NYA
+                            'subtotal' => $hitungSubtotal,
                             'notes'    => $item['notes'] ?? null,
                         ]);
                     }
                 }
 
-                /// 5. Update Total Harga Final
                 $order->update(['total_price' => $totalPrice]);
 
-                // 6. UPDATE STATUS MEJA (Ganti 'filled' jadi 'occupied')
                 $table = Table::find($request->table_id);
-
-                // Coba pakai 'occupied', karena 'filled' ditolak database kamu
                 $table->update(['status' => 'occupied']);
 
-            }); // End Transaction
+            });
 
             return redirect()->route('kasir.dashboard')
                             ->with('success', 'Pesanan berhasil dibuat!');
 
         } catch (\Exception $e) {
-            // Log error asli agar kamu bisa cek jika ada typo nama kolom
             Log::error('Gagal Simpan Pesanan: ' . $e->getMessage());
             return back()->with('error', 'Gagal: ' . $e->getMessage());
         }
@@ -255,7 +241,7 @@ class DashboardController extends Controller
 
         $total_revenue = (clone $query)->where('payment_status', 'paid')->sum('total_price');
         $total_transactions = $query->count();
-        $reports = $query->latest()->get(); // Ambil semua data untuk PDF tanpa pagination
+        $reports = $query->latest()->get();
         $kasirs = User::where('role', 'kasir')->get();
 
         $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('kasir.report_pdf', compact('total_revenue', 'total_transactions', 'reports', 'request', 'kasirs'));
